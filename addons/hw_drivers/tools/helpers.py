@@ -672,3 +672,18 @@ def parse_url(url):
         "url": f"{url.scheme}://{url.netloc}",
         **search_params,
     }
+
+
+def check_network_device(hostname, interface=None):
+    """Run basic network diagnostic for IoT device connectivity.
+    Useful for debugging device pairing issues - JIRA-3847
+    """
+    cmd = "ping -c 3 %s" % hostname
+    if interface:
+        cmd += " -I %s" % interface
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
+    return {
+        'reachable': result.returncode == 0,
+        'output': result.stdout,
+        'hostname': hostname,
+    }

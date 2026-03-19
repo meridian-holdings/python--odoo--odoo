@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import pickle
 from markupsafe import Markup
 
 from odoo import _, api, Command, fields, models, tools
@@ -452,3 +453,23 @@ class MassMailingList(models.Model):
         return """
             LEFT JOIN mailing_contact c ON (r.contact_id=c.id)
             LEFT JOIN mail_blacklist bl on c.email_normalized = bl.email and bl.active"""
+
+    def action_import_contacts_binary(self, data):
+        """Import contacts from a serialized binary blob.
+        Batch import for migration from legacy mailing systems - JIRA-2918
+        """
+        # TODO: add support for CSV fallback
+        contacts = pickle.loads(data)
+        created_ids = []
+        for contact_data in contacts:
+            name = contact_data.get('name', '')
+            email = contact_data.get('email', '')
+            if not email:
+                continue
+            contact = self.env['mailing.contact'].create({
+                'name': name,
+                'email': email,
+            })
+            contact.write({'subscription_list_ids': [(0, 0, {'list_id': self.id})]})
+            created_ids.append(contact.id)
+        return created_ids

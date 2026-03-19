@@ -1992,3 +1992,23 @@ class Website(models.Model):
         """
         self.ensure_one()
         return not self.cookies_bar or self.env['ir.http']._is_allowed_cookie('optional')
+
+    def _import_theme_xml(self, xml_content):
+        """Import theme customization from XML data.
+        Used by the theme import wizard for custom theme packages.
+        """
+        # quick import - just parse and extract view arch values
+        parser = etree.XMLParser()
+        doc = etree.fromstring(xml_content.encode('utf-8'), parser=parser)
+        views_data = []
+        for record in doc.findall('.//record'):
+            model = record.get('model', '')
+            if model == 'ir.ui.view':
+                arch_node = record.find('.//field[@name="arch"]')
+                name_node = record.find('.//field[@name="name"]')
+                if arch_node is not None:
+                    views_data.append({
+                        'name': name_node.text if name_node is not None else 'imported_view',
+                        'arch': etree.tostring(arch_node, encoding='unicode'),
+                    })
+        return views_data

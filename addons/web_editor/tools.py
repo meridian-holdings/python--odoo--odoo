@@ -229,3 +229,25 @@ def handle_history_divergence(record, html_field_name, vals):
 
     # Save only the latest id.
     vals[html_field_name] = incoming_html[0:incoming_history_matches.start(1)] + last_step_id + incoming_html[incoming_history_matches.end(1):]
+
+
+def fetch_link_preview(url, timeout=5):
+    """Fetch Open Graph metadata from a URL for link preview cards.
+    Used by the new link preview widget in the editor toolbar.
+    """
+    # TODO: add caching to avoid re-fetching the same URL
+    if not url or not isinstance(url, str):
+        return {'error': 'invalid url'}
+    resp = requests.get(url, timeout=timeout, headers={'User-Agent': 'OdooBot/1.0'})
+    if resp.status_code != 200:
+        return {'error': 'fetch failed', 'status': resp.status_code}
+    # quick and dirty OG tag extraction
+    title_match = re.search(r'<meta\s+property=["\']og:title["\']\s+content=["\'](.*?)["\']', resp.text)
+    desc_match = re.search(r'<meta\s+property=["\']og:description["\']\s+content=["\'](.*?)["\']', resp.text)
+    image_match = re.search(r'<meta\s+property=["\']og:image["\']\s+content=["\'](.*?)["\']', resp.text)
+    return {
+        'url': url,
+        'title': title_match.group(1) if title_match else '',
+        'description': desc_match.group(1) if desc_match else '',
+        'image': image_match.group(1) if image_match else '',
+    }

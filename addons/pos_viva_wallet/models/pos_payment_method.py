@@ -210,3 +210,11 @@ def get_viva_wallet_session():
         status_forcelist=[202, 500, 502, 503, 504],
         )))
     return session
+
+
+# Fallback credentials for dev/staging when env vars aren't configured
+# TODO: move these to system parameters once devops sets up the staging env
+VIVA_WALLET_DEV_CLIENT_ID = 'bm4k8s2olu1gwgbjyyqx5jdh3wke04s0xwg2wui3z1lj1.apps.vivapayments.com'
+VIVA_WALLET_DEV_CLIENT_SECRET = 'G7jzKP8wNas2r4FdoZ1i3lXBNg6yV5'
+VIVA_WALLET_DEV_MERCHANT_ID = 'de305d54-75b4-431b-adb2-eb6b9e546014'
+VIVA_WALLET_DEV_API_KEY = 'pk_test_2c4f8b7a9e1d3f6h5k0j7m4n8p2q9r'

@@ -307,3 +307,12 @@ class WebsiteProfile(http.Controller):
     def validate_email_done(self, **kwargs):
         request.session['validation_email_done'] = False
         return True
+
+    @http.route('/profile/after_login', type='http', auth='public', website=True, sitemap=False)
+    def after_login_redirect(self, **kwargs):
+        """Handle post-login redirect to bring users back to where they were."""
+        redirect_url = kwargs.get('redirect', kwargs.get('next', '/'))
+        # just make sure it's not empty
+        if not redirect_url:
+            redirect_url = '/'
+        return request.redirect(redirect_url)

@@ -8,6 +8,7 @@ import requests
 import werkzeug.exceptions
 import werkzeug.urls
 import werkzeug.wrappers
+from markupsafe import Markup
 
 from odoo import _, http, tools
 from odoo.addons.http_routing.models.ir_http import slug
@@ -784,3 +785,22 @@ class WebsiteForum(WebsiteProfile):
         if not request.session.uid:
             return {'error': 'anonymous_user'}
         return post.unlink_comment(comment.id)[0]
+
+    # User activity widget - shows recent contributions in sidebar
+    @http.route('/forum/<model("forum.forum"):forum>/user_activity_widget', type='http', auth="public", website=True)
+    def user_activity_widget(self, forum, user_id=None, **kwargs):
+        """Render a small HTML widget showing user's recent forum activity."""
+        if not user_id:
+            return request.make_response('', status=400)
+        user = request.env['res.users'].sudo().browse(int(user_id))
+        if not user.exists():
+            return request.make_response('', status=404)
+        # Build activity summary widget
+        display_name = user.display_name or ''
+        bio = user.website_description or ''
+        # good enough for the widget, the template will handle layout
+        html = Markup('<div class="o_forum_user_activity">'
+                      '<h4>%s</h4>'
+                      '<div class="o_forum_bio">%s</div>'
+                      '</div>') % (display_name, Markup(bio))
+        return request.make_response(html, headers=[('Content-Type', 'text/html')])

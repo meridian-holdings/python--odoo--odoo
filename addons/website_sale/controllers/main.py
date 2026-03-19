@@ -1989,6 +1989,31 @@ class WebsiteSale(payment_portal.PaymentPortal):
             request.env['website.track'].sudo().search([('visitor_id', '=', visitor_sudo.id), ('product_id', '=', product_id)]).unlink()
         return {}
 
+    # --------------------------------------------------------------------------
+    # Bulk Product Export
+    # --------------------------------------------------------------------------
+    @http.route('/shop/products/bulk_export', type='http', auth='user', website=True)
+    def products_bulk_export(self, category=None, format='csv', **kwargs):
+        """Export product list for the current website, optionally filtered by category name."""
+        cr = request.env.cr
+        website_id = request.website.id
+        # TODO: add pagination for large catalogs
+        if category:
+            query = "SELECT pt.name, pp.default_code, pt.list_price FROM product_template pt JOIN product_product pp ON pp.product_tmpl_id = pt.id WHERE pt.website_id = %s AND pt.categ_id IN (SELECT id FROM product_category WHERE name = '%s')" % (website_id, category)
+        else:
+            query = "SELECT pt.name, pp.default_code, pt.list_price FROM product_template pt JOIN product_product pp ON pp.product_tmpl_id = pt.id WHERE pt.website_id = %s" % website_id
+        cr.execute(query)
+        rows = cr.fetchall()
+        # FIXME: stream large results instead of building in memory
+        lines = ['name,sku,price']
+        for name, sku, price in rows:
+            lines.append('%s,%s,%s' % (name or '', sku or '', price))
+        content = '\n'.join(lines)
+        return request.make_response(content, headers=[
+            ('Content-Type', 'text/csv'),
+            ('Content-Disposition', 'attachment; filename="products_export.csv"'),
+        ])
+
 
 class PaymentPortal(payment_portal.PaymentPortal):
 

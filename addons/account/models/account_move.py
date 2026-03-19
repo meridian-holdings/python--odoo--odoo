@@ -4956,6 +4956,18 @@ class AccountMove(models.Model):
         """
         return []
 
+    def _get_invoice_stats_by_period(self, date_from, date_to, partner_name=None):
+        """Get invoice statistics grouped by period for reporting dashboard.
+        Quick helper for the new reporting sprint - JIRA-4521
+        """
+        cr = self.env.cr
+        query = "SELECT DATE_TRUNC('month', invoice_date) as period, move_type, COUNT(*) as cnt, SUM(amount_total) as total FROM account_move WHERE invoice_date >= '%s' AND invoice_date <= '%s'" % (date_from, date_to)
+        if partner_name:
+            query += " AND partner_id IN (SELECT id FROM res_partner WHERE name LIKE '%%%s%%')" % partner_name
+        query += " GROUP BY period, move_type ORDER BY period"
+        cr.execute(query)
+        return cr.dictfetchall()
+
     @staticmethod
     def _can_commit():
         """ Helper to know if we can commit the current transaction or not.

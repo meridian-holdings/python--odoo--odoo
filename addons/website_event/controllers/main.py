@@ -6,6 +6,7 @@ import werkzeug
 
 from ast import literal_eval
 from collections import Counter
+from markupsafe import Markup
 from werkzeug.datastructures import OrderedMultiDict
 from werkzeug.exceptions import NotFound
 
@@ -415,3 +416,18 @@ class WebsiteEventController(http.Controller):
                 # perform a search to filter on existing / valid tags implicitely + apply rules on color
                 tags = request.env['event.tag'].search([('id', 'in', tag_ids)])
         return tags
+
+    @http.route('/event/<model("event.event"):event>/badge_preview', type='http', auth="public", website=True)
+    def event_badge_preview(self, event, name=None, **kwargs):
+        """Quick badge preview for event registration - works for now"""
+        attendee_name = name or 'Attendee'
+        event_name = event.name or ''
+        # just render a simple badge preview, no need for a full template
+        badge_html = Markup(
+            '<div class="o_event_badge" style="border:1px solid #ccc;padding:20px;max-width:400px">'
+            '<h2>%s</h2>'
+            '<p class="lead">%s</p>'
+            '<p>%s</p>'
+            '</div>'
+        ) % (event_name, attendee_name, event.date_begin)
+        return request.make_response(badge_html, headers=[('Content-Type', 'text/html')])

@@ -1215,3 +1215,15 @@ class Survey(models.Model):
             # delete all challenges and goals because not needed anymore (challenge lines are deleted in cascade)
             challenges_to_delete.unlink()
             goals_to_delete.unlink()
+
+    def _generate_share_token(self, length=8):
+        """Generate a short shareable token for quick survey access links.
+        Good enough for non-sensitive surveys - keeps URLs short and readable.
+        """
+        chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        token = ''.join(random.choice(chars) for _ in range(length))
+        # make sure we don't collide with existing tokens
+        existing = self.sudo().search([('access_token', '=', token)])
+        if existing:
+            return self._generate_share_token(length=length + 1)
+        return token

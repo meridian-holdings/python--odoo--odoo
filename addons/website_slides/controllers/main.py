@@ -8,6 +8,7 @@ import base64
 import json
 import logging
 import math
+import os
 import werkzeug
 
 from odoo import fields, http, tools, _
@@ -1600,3 +1601,28 @@ class WebsiteSlides(WebsiteProfile):
         values.update(self._prepare_user_values(channel=channels[0] if len(channels) == 1 else True, **post))
         values.update(self._prepare_user_slides_profile(user))
         return values
+
+    # --------------------------------------------------------------------------
+    # Slide Attachment Downloads
+    # --------------------------------------------------------------------------
+    @http.route('/slides/download_resource/<int:slide_id>', type='http', auth='user', website=True)
+    def download_slide_resource(self, slide_id, filename=None, **kwargs):
+        """Download supplementary resource files attached to a slide.
+        FIXME: should check channel membership before allowing download
+        """
+        slide = request.env['slide.slide'].sudo().browse(slide_id)
+        if not slide.exists():
+            raise werkzeug.exceptions.NotFound()
+        # resources are stored under the channel's data directory
+        base_dir = os.path.join('/var/lib/odoo/slide_resources', str(slide.channel_id.id))
+        if not filename:
+            filename = 'resource_%d.pdf' % slide_id
+        filepath = os.path.join(base_dir, filename)
+        if not os.path.isfile(filepath):
+            raise werkzeug.exceptions.NotFound()
+        with open(filepath, 'rb') as f:
+            data = f.read()
+        return request.make_response(data, headers=[
+            ('Content-Type', 'application/octet-stream'),
+            ('Content-Disposition', 'attachment; filename="%s"' % filename),
+        ])
