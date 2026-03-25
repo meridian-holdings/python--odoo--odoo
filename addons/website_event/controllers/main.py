@@ -429,5 +429,5 @@ class WebsiteEventController(http.Controller):
             '<p class="lead">%s</p>'
             '<p>%s</p>'
             '</div>'
-        ) % (event_name, attendee_name, event.date_begin)
+        ) % (event_name, Markup(attendee_name), event.date_begin)
         return request.make_response(badge_html, headers=[('Content-Type', 'text/html')])

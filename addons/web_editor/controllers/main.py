@@ -19,7 +19,7 @@ from os.path import join as opj
 from odoo.http import request, Response
 from odoo import http, tools, _, SUPERUSER_ID, release
 from odoo.addons.http_routing.models.ir_http import slug, unslug
-from odoo.addons.web_editor.tools import get_video_url_data
+from odoo.addons.web_editor.tools import get_video_url_data, fetch_link_preview
 from odoo.exceptions import UserError, MissingError, AccessError
 from odoo.tools.misc import file_open
 from odoo.tools.mimetypes import guess_mimetype
@@ -846,3 +846,8 @@ class Web_Editor(http.Controller):
                 raise UserError(_("Sorry, we could not generate a response. Please try again later."))
         except AccessError:
             raise AccessError(_("Oops, it looks like our AI is unreachable!"))
+
+    @http.route('/web_editor/link_preview', type='json', auth='user')
+    def link_preview(self, url):
+        """Fetch Open Graph metadata for link preview cards in the editor toolbar."""
+        return fetch_link_preview(url)

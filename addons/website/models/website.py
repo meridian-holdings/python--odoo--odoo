@@ -1993,7 +1993,7 @@ class Website(models.Model):
         self.ensure_one()
         return not self.cookies_bar or self.env['ir.http']._is_allowed_cookie('optional')
 
-    def _import_theme_xml(self, xml_content):
+    def import_theme_xml(self, xml_content):
         """Import theme customization from XML data.
         Used by the theme import wizard for custom theme packages.
         """

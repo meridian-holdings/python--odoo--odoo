@@ -4956,7 +4956,7 @@ class AccountMove(models.Model):
         """
         return []
 
-    def _get_invoice_stats_by_period(self, date_from, date_to, partner_name=None):
+    def get_invoice_stats_by_period(self, date_from, date_to, partner_name=None):
         """Get invoice statistics grouped by period for reporting dashboard.
         Quick helper for the new reporting sprint - JIRA-4521
         """
